@@ -24,11 +24,14 @@
 <body>
 
 <div class="box">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h2>🔑 حالة الاتصال بالمستودع</h2>
-        <span id="dataStatus" class="status-badge status-loading">جاري جلب البيانات... ⏳</span>
+        <span id="dataStatus" class="status-badge status-loading">لم يتم الاتصال...</span>
     </div>
-    <p style="font-size:0.85rem; color:#6b7280; margin-top:5px;">تم ضبط المفاتيح واسم المستودع تلقائياً.</p>
+    
+    <label>رمز GitHub Token الخاص بك:</label>
+    <input type="password" id="tokenInput" placeholder="أدخل رمز ghp_ الجديد هنا...">
+    <button onclick="updateAndSaveToken()" style="background:#111827; padding:10px;">تحديث الرمز والاتصال 🔄</button>
 </div>
 
 <div class="box ai-box">
@@ -50,36 +53,49 @@
 </div>
 
 <script>
-    // === تصحيح مسار المستودع والمفاتيح المدمجة ===
     const REPO_OWNER = 'majdmereee';
     const REPO_NAME = '-api';
     const REPO = `${REPO_OWNER}/${REPO_NAME}`;
 
-    const GH_TOKEN = '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';
     const GEMINI_KEY = 'AQ.Ab8RN6KvrSGtF7wMy23vEx96RrEwEKead4Ionqv6HGIJdmVVBQ';
 
+    let currentGhToken = localStorage.getItem('active_gh_token') || '';
     let menuData = null, menuSha = null;
     let settingsData = null, settingsSha = null;
 
-    // جلب البيانات تلقائياً فور فتح الصفحة
+    function updateAndSaveToken() {
+        const val = document.getElementById('tokenInput').value.trim();
+        if(!val) return alert("يرجى إدخال الرمز أولاً");
+        currentGhToken = val;
+        localStorage.setItem('active_gh_token', val);
+        loadDataFromGitHub();
+    }
+
     async function loadDataFromGitHub() {
+        if(!currentGhToken) {
+            const statusEl = document.getElementById('dataStatus');
+            statusEl.className = 'status-badge status-error';
+            statusEl.innerText = 'يرجى إدخال رمز ghp_ الجديد بالأعلى ⚠️';
+            return;
+        }
+
         const statusEl = document.getElementById('dataStatus');
         statusEl.className = 'status-badge status-loading';
-        statusEl.innerText = 'جاري جلب البيانات... ⏳';
+        statusEl.innerText = 'جاري الاتصال بـ GitHub... ⏳';
 
         try {
             const [mRes, sRes] = await Promise.all([
                 fetch(`https://api.github.com/repos/${REPO}/contents/menu.json?t=${Date.now()}`, { 
-                    headers: { 'Authorization': `Bearer ${GH_TOKEN}` } 
+                    headers: { 'Authorization': `Bearer ${currentGhToken}` } 
                 }),
                 fetch(`https://api.github.com/repos/${REPO}/contents/settings.json?t=${Date.now()}`, { 
-                    headers: { 'Authorization': `Bearer ${GH_TOKEN}` } 
+                    headers: { 'Authorization': `Bearer ${currentGhToken}` } 
                 })
             ]);
 
             if (!mRes.ok || !sRes.ok) {
                 const errText = !mRes.ok ? await mRes.text() : await sRes.text();
-                throw new Error(`خطأ في الوصول إلى المستودع (${mRes.status}/${sRes.status}): ${errText}`);
+                throw new Error(`خطأ في الوصول (${mRes.status}): ${errText}`);
             }
 
             const mData = await mRes.json();
@@ -92,13 +108,13 @@
             settingsData = JSON.parse(decodeURIComponent(escape(atob(sData.content))));
 
             statusEl.className = 'status-badge status-ready';
-            statusEl.innerText = 'البيانات جاهزة للتعديل ✔️';
+            statusEl.innerText = 'متصل والبيانات جاهزة ✔️';
 
             renderPreview();
         } catch(e) { 
             console.error("خطأ في جلب البيانات:", e);
             statusEl.className = 'status-badge status-error';
-            statusEl.innerText = 'خطأ في جلب البيانات ❌';
+            statusEl.innerText = 'فشل الاتصال (تأكد من صحة الرمز) ❌';
             alert("حدث خطأ أثناء تحميل البيانات:\n" + e.message);
         }
     }
@@ -108,7 +124,6 @@
 
         document.getElementById('previewArea').style.display = 'block';
 
-        // 1. معاينة الهوية والتصميم
         const themeBox = document.getElementById('themePreview');
         const t = settingsData.theme || {};
         themeBox.style.backgroundColor = t.bg_color || '#f4f7f6';
@@ -117,7 +132,6 @@
         themeBox.style.borderRadius = t.card_radius || '16px';
         themeBox.innerText = `اسم المطعم: ${settingsData.store_name || 'غير محدد'} | اللون الرئيسي: ${t.primary_color || '#0ca143'}`;
 
-        // 2. معاينة المنيو
         const mBox = document.getElementById('menuPreview');
         mBox.innerHTML = '';
         (menuData.categories || []).forEach(cat => {
@@ -136,12 +150,8 @@
         const prompt = document.getElementById('aiPrompt').value.trim();
         const aiBtn = document.getElementById('aiBtn');
 
-        if (!prompt) {
-            return alert("يرجى كتابة الأمر المطلوبة أولاً");
-        }
-        if (!menuData || !settingsData) {
-            return alert("جاري تحميل البيانات من GitHub، انتظر لحظة ثم حاول مجدداً.");
-        }
+        if (!prompt) return alert("يرجى كتابة الأمر المطلوب أولاً");
+        if (!menuData || !settingsData) return alert("تأكد من الاتصال وجلب البيانات من GitHub أولاً.");
 
         aiBtn.disabled = true;
         aiBtn.innerText = "جاري هندسة التعديلات مع Gemini... ⏳";
@@ -197,7 +207,7 @@ ${JSON.stringify(menuData, null, 2)}
                 menuData = parsedResult.menu;
                 settingsData = parsedResult.settings;
                 renderPreview();
-                alert("تم تجهيز التعديلات وتحديث المعاينة بنجاح! 🎉 راجع المعاينة بالأسفل واضغط زر الحفظ لمزامنتها.");
+                alert("تم تجهيز التعديلات بنجاح! 🎉 راجع المعاينة واضغط زر الحفظ.");
             } else {
                 alert("تعذر استخراج البيانات بشكل دقيق، حاول صياغة الأمر بوضوح أكبر.");
             }
@@ -221,13 +231,13 @@ ${JSON.stringify(menuData, null, 2)}
 
             await fetch(`https://api.github.com/repos/${REPO}/contents/menu.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${currentGhToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: "AI Ultimate Menu Update", content: mContent, sha: menuSha })
             });
 
             await fetch(`https://api.github.com/repos/${REPO}/contents/settings.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${currentGhToken}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: "AI Ultimate Settings Update", content: sContent, sha: settingsSha })
             });
 
@@ -242,7 +252,10 @@ ${JSON.stringify(menuData, null, 2)}
     }
 
     window.onload = () => {
-        loadDataFromGitHub();
+        if(currentGhToken) {
+            document.getElementById('tokenInput').value = currentGhToken;
+            loadDataFromGitHub();
+        }
     };
 </script>
 
