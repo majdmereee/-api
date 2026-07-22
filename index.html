@@ -1,69 +1,212 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Garden Food</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
-    <style id="dynamicStyles">
-        /* الأنماط الافتراضية المبدئية */
-        :root {
-            --primary: #0ca143;
-            --bg: #f4f7f6;
-            --surface: #ffffff;
-            --text: #111827;
-            --radius: 16px;
-        }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Tajawal', sans-serif; padding: 20px; text-align: center; transition: all 0.3s ease; }
-        .card { background: var(--surface); padding: 15px; margin: 10px auto; max-width: 400px; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.05); }
-        .price { color: var(--primary); font-weight: 900; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="siteTitle">قائمة الطعام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <!-- متغيرات التصميم الديناميكية التي يتحكم بها Gemini -->
+  <style id="dynamicTheme">
+    :root {
+      --primary-color: #0ca143;
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-color: #111827;
+      --font-size-base: 16px;
+    }
+  </style>
+
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: var(--font-size-base);
+      margin: 0;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .header {
+      text-align: center;
+      padding: 30px 10px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .header h1 {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: 2.2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .category-title {
+      margin: 30px 0 15px 0;
+      font-size: 1.5rem;
+      border-right: 5px solid var(--primary-color);
+      padding-right: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .card-price {
+      background: var(--primary-color);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .card-desc {
+      opacity: 0.8;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
 
-    <h1 id="title">جاري التحميل...</h1>
-    <div id="menuContainer"></div>
+<div class="container">
+  <!-- رأس الصفحة ومعلومات المطعم -->
+  <header class="header">
+    <h1 id="restaurantName">مطعمنا</h1>
+    <p id="restaurantAddress" style="opacity: 0.7; margin-top: 5px;"></p>
+  </header>
 
-    <script>
-        async function loadApp() {
-            try {
-                const [sRes, mRes] = await Promise.all([
-                    fetch('./settings.json?t=' + Date.now()),
-                    fetch('./menu.json?t=' + Date.now())
-                ]);
-                const settings = await sRes.json();
-                const menu = await mRes.json();
+  <!-- مكان عرض قائمة الطعام -->
+  <main id="menuContainer">
+    <p style="text-align: center;">جاري تحميل قائمة الطعام والتصميم...</p>
+  </main>
+</div>
 
-                // 1. تطبيق ألوان وتنسيقات الذكاء الاصطناعي ديناميكياً
-                if(settings.theme) {
-                    const root = document.documentElement;
-                    root.style.setProperty('--primary', settings.theme.primary_color || '#0ca143');
-                    root.style.setProperty('--bg', settings.theme.bg_color || '#f4f7f6');
-                    root.style.setProperty('--surface', settings.theme.surface_color || '#ffffff');
-                    root.style.setProperty('--text', settings.theme.text_color || '#111827');
-                    root.style.setProperty('--radius', settings.theme.card_radius || '16px');
-                }
+<script>
+  // تحميل إعدادات المطعم والتصميم والقائمة وتطبيقها
+  async function initClientPage() {
+    try {
+      // 1. جلب الإعدادات والتصميم
+      const settingsRes = await fetch('settings.json');
+      const settings = await settingsRes.json();
+      
+      // تطبيق الاسم
+      document.getElementById('restaurantName').textContent = settings.restaurant_name || "المطعم";
+      document.getElementById('siteTitle').textContent = settings.restaurant_name || "قائمة الطعام";
+      if(settings.address) {
+        document.getElementById('restaurantAddress').textContent = settings.address;
+      }
 
-                document.getElementById('title').innerText = settings.store_name;
-                document.getElementById('pageTitle').innerText = settings.store_name;
+      // تطبيق ثيم الألوان والتصميم المولد بواسطة Gemini
+      if (settings.theme) {
+        const root = document.querySelector(':root');
+        if (settings.theme.primary_color) root.style.setProperty('--primary-color', settings.theme.primary_color);
+        if (settings.theme.bg_color) root.style.setProperty('--bg-color', settings.theme.bg_color);
+        if (settings.theme.card_bg) root.style.setProperty('--card-bg', settings.theme.card_bg);
+        if (settings.theme.text_color) root.style.setProperty('--text-color', settings.theme.text_color);
+        if (settings.theme.font_size) root.style.setProperty('--font-size-base', settings.theme.font_size);
+      }
 
-                // 2. عرض المحتوى
-                const container = document.getElementById('menuContainer');
-                container.innerHTML = '';
+      // 2. جلب قائمة الطعام وعرضها
+      const menuRes = await fetch('menu.json');
+      const menu = await menuRes.json();
+      
+      renderMenu(menu, settings.currency || "");
 
-                (menu.categories || []).forEach(cat => {
-                    container.innerHTML += `<h2 style="margin-top:25px; color:var(--primary)">📁 ${cat.name}</h2>`;
-                    (cat.items || []).forEach(item => {
-                        container.innerHTML += `
-                            <div class="card">
-                                <span>${item.name}</span>
-                                <span class="price">${item.price} ${settings.currency || ''}</span>
-                            </div>`;
-                    });
-                });
-            } catch(e) { console.error("Error loading app data:", e); }
-        }
-        window.onload = loadApp;
-    </script>
+    } catch (error) {
+      console.error("خطأ أثناء تحميل البيانات:", error);
+      document.getElementById('menuContainer').innerHTML = `
+        <div style="text-align: center; color: red; padding: 20px;">
+          عذراً، تعذر تحميل القائمة. تأكد من وجود ملفات menu.json و settings.json.
+        </div>
+      `;
+    }
+  }
+
+  // دالة طباعة القائمة ديناميكياً
+  function renderMenu(menu, currency) {
+    const container = document.getElementById('menuContainer');
+    container.innerHTML = '';
+
+    if (!menu.categories || menu.categories.length === 0) {
+      container.innerHTML = '<p style="text-align:center;">القائمة فارغة حالياً.</p>';
+      return;
+    }
+
+    menu.categories.forEach(category => {
+      // عنوان القسم
+      const catTitle = document.createElement('h2');
+      catTitle.className = 'category-title';
+      catTitle.textContent = category.name;
+      container.appendChild(catTitle);
+
+      // شبكة الوجبات
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+
+      category.items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div>
+            <div class="card-header">
+              <h3 class="card-title">${item.name}</h3>
+              <span class="card-price">${item.price} ${currency}</span>
+            </div>
+            <p class="card-desc">${item.description || ''}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      container.appendChild(grid);
+    });
+  }
+
+  // تشغيل عند فتح الصفحة
+  window.onload = initClientPage;
+</script>
+
 </body>
 </html>
