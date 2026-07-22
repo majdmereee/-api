@@ -3,214 +3,284 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم الذكية - إدارة المطعم</title>
+  <title>لوحة التحكم بالذكاء الاصطناعي الكامل</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <style id="custom-theme">
+    :root {
+      --primary-color: #0ca143;
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-color: #111827;
+      --font-size-base: 16px;
+    }
+  </style>
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
-      background: #f4f7f6;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: var(--font-size-base);
       padding: 20px;
-      color: #111827;
       margin: 0;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
+    .container { max-width: 900px; margin: 0 auto; }
     .box {
-      background: white;
-      padding: 24px;
+      background: var(--card-bg);
+      padding: 20px;
       border-radius: 16px;
       margin-bottom: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    h2 {
-      margin-top: 0;
-      color: #0ca143;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 12px;
-    }
-    input, textarea, select {
+    input, textarea, button {
       width: 100%;
       padding: 12px;
-      border: 2px solid #eee;
-      border-radius: 10px;
       margin-top: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       box-sizing: border-box;
       font-family: inherit;
     }
-    input:focus, textarea:focus {
-      border-color: #0ca143;
-      outline: none;
-    }
     button {
-      background: #0ca143;
+      background: var(--primary-color);
       color: white;
       border: none;
-      padding: 14px;
-      width: 100%;
-      border-radius: 10px;
       font-weight: bold;
-      font-size: 1rem;
       cursor: pointer;
-      margin-top: 15px;
-      transition: background 0.2s;
     }
-    button:hover {
-      background: #098034;
+    .chat-box {
+      background: #eef2ff;
+      border: 2px solid #6366f1;
+      padding: 15px;
+      border-radius: 12px;
     }
-    button:active {
-      transform: scale(0.98);
-    }
-    .ai-box {
-      background: #f0fdf4;
-      border: 2px dashed #0ca143;
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 20px;
+    .log-box {
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
       font-size: 0.85rem;
-      font-weight: bold;
-      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
     }
-    .status-loading { background: #fef3c7; color: #d97706; }
-    .status-ready { background: #dcfce7; color: #15803d; }
-    .status-error { background: #fee2e2; color: #b91c1c; }
-    .menu-item-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🍔 لوحة تحكم إدارة المطعم</h1>
+  <h1>🤖 إدارة المطعم الشاملة مع Gemini AI</h1>
 
-  <!-- قسم إعدادات Gemini API -->
+  <!-- ضبط المفتاح -->
   <div class="box">
-    <h2>🔑 إعدادات Gemini API</h2>
-    <p>ادخل مفتاح الـ API الخاص بك هنا لاستخدامه في توليد الوصف والعروض الذكية:</p>
-    <input type="password" id="apiKeyInput" placeholder="أدخل مفتاح Gemini API هنا (AIzaSy...)">
-    <button onclick="saveApiKey()">حفظ المفتاح محلياً</button>
-    <div id="apiStatus"></div>
+    <h3>🔑 مفتاح التشغيل (Gemini API)</h3>
+    <input type="password" id="apiKey" placeholder="أدخل مفتاح Gemini API...">
+    <button onclick="saveKey()">حفظ المفتاح</button>
   </div>
 
-  <!-- قسم المساعد الذكي -->
-  <div class="ai-box">
-    <h2>✨ المساعد الذكي لتوليد الوصف والعروض</h2>
-    <label>اسم الوجبة أو المكونات:</label>
-    <input type="text" id="dishName" placeholder="مثال: برغر كلاسيك مع جبنة شيدر وشريحة بيكون">
-    
-    <button onclick="generateDescription()">توليد وصف جذاب للوجبة 🪄</button>
-    
-    <label>النتيجة المقترحة:</label>
-    <textarea id="aiOutput" rows="4" placeholder="سيظهر الوصف المولد هنا..."></textarea>
+  <!-- مركز التحكم الذكي (الأوامر الصوتية أو النصية لـ Gemini) -->
+  <div class="box chat-box">
+    <h2>💬 أمر Gemini للتعديل على أي شيء في الموقع</h2>
+    <p><small>مثال: "أضف وجبة بيتزا ببروني بسعر 12$" أو "غير خلفية الموقع للون الداكن" أو "غير اسم المطعم إلى مطعم البركة"</small></p>
+    <textarea id="aiPrompt" rows="3" placeholder="اكتب لـ Gemini ما تريد تعديله الآن..."></textarea>
+    <button onclick="sendToGemini()">تنفيذ الأمر بواسطة Gemini 🚀</button>
   </div>
 
-  <!-- قسم إدارة القائمة -->
+  <!-- سجل الأوامر البرمجية التي ينفذها Gemini -->
   <div class="box">
-    <h2>📋 قائمة الطعام الحالية (menu.json)</h2>
-    <div id="menuContainer">جاري تحميل القائمة...</div>
+    <h4>📜 سجل الأوامر التي نفذها الذكاء الاصطناعي:</h4>
+    <div id="logs" class="log-box">في انتظار الأوامر...</div>
+  </div>
+
+  <!-- المعاينة الحية للبيانات -->
+  <div class="grid">
+    <div class="box">
+      <h3>⚙️ إعدادات الموقع وتصميمه</h3>
+      <pre id="settingsPreview">جاري التحميل...</pre>
+    </div>
+    <div class="box">
+      <h3>🍕 قائمة الطعام الحالية</h3>
+      <pre id="menuPreview">جاري التحميل...</pre>
+    </div>
   </div>
 </div>
 
 <script>
-  // تحميل المفتاح والمحتوى عند فتح الصفحة
-  window.onload = function() {
-    const savedKey = localStorage.getItem('GEMINI_API_KEY');
-    if (savedKey) {
-      document.getElementById('apiKeyInput').value = savedKey;
-      document.getElementById('apiStatus').innerHTML = '<span class="status-badge status-ready">المفتاح محفوض وجاهز للاستخدام</span>';
+  // 1. البيانات التفاعلية في الـ Memory
+  let siteSettings = {
+    restaurant_name: "مطعم الوجبات الشهية",
+    theme: {
+      primary_color: "#0ca143",
+      bg_color: "#f4f7f6",
+      card_bg: "#ffffff",
+      text_color: "#111827",
+      font_size: "16px"
     }
-    loadMenu();
   };
 
-  function saveApiKey() {
-    const key = document.getElementById('apiKeyInput').value.trim();
-    if (key) {
-      localStorage.setItem('GEMINI_API_KEY', key);
-      document.getElementById('apiStatus').innerHTML = '<span class="status-badge status-ready">تم حفظ المفتاح بنجاح!</span>';
-    } else {
-      alert('يرجى إدخال مفتاح صحيح');
+  let siteMenu = {
+    categories: [
+      {
+        name: "الرئيسية",
+        items: [{ id: 1, name: "برغر لحم", price: 10, description: "برغر شهي" }]
+      }
+    ]
+  };
+
+  window.onload = () => {
+    if(localStorage.getItem('GEMINI_API_KEY')) {
+      document.getElementById('apiKey').value = localStorage.getItem('GEMINI_API_KEY');
     }
+    updateUI();
+  };
+
+  function saveKey() {
+    localStorage.setItem('GEMINI_API_KEY', document.getElementById('apiKey').value);
+    alert('تم حفظ المفتاح!');
   }
 
-  // استدعاء Gemini API
-  async function generateDescription() {
-    const apiKey = localStorage.getItem('GEMINI_API_KEY') || document.getElementById('apiKeyInput').value.trim();
-    const dish = document.getElementById('dishName').value.trim();
+  function log(msg) {
+    const l = document.getElementById('logs');
+    l.innerHTML += `<br>> ${msg}`;
+    l.scrollTop = l.scrollHeight;
+  }
 
-    if (!apiKey) {
-      alert('يرجى إدخال وحفظ مفتاح Gemini API أولاً!');
-      return;
+  // 2. تحديث واجهة الموقع والتصميم فوراً
+  function updateUI() {
+    // تطبيق الثيم والتصميم
+    const root = document.querySelector(':root');
+    root.style.setProperty('--primary-color', siteSettings.theme.primary_color);
+    root.style.setProperty('--bg-color', siteSettings.theme.bg_color);
+    root.style.setProperty('--card-bg', siteSettings.theme.card_bg);
+    root.style.setProperty('--text-color', siteSettings.theme.text_color);
+    root.style.setProperty('--font-size-base', siteSettings.theme.font_size);
+
+    // عرض البيانات
+    document.getElementById('settingsPreview').textContent = JSON.stringify(siteSettings, null, 2);
+    document.getElementById('menuPreview').textContent = JSON.stringify(siteMenu, null, 2);
+  }
+
+  // 3. أدوات الوظائف (Functions) المتاحة لـ Gemini
+  const systemTools = [
+    {
+      type: "function",
+      name: "update_design",
+      description: "تعديل ألوان وتصميم ورسوميات الموقع من A to Z",
+      parameters: {
+        type: "object",
+        properties: {
+          primary_color: { type: "string", description: "اللون الرئيسي الممثل للموقع (Hex Color)" },
+          bg_color: { type: "string", description: "لون الخلفية" },
+          card_bg: { type: "string", description: "لون خلفية البطاقات والبوكسات" },
+          text_color: { type: "string", description: "لون النصوص" },
+          font_size: { type: "string", description: "حجم الخط مثل 16px أو 18px" }
+        }
+      }
+    },
+    {
+      type: "function",
+      name: "add_menu_item",
+      description: "إضافة وجبة جديدة للقائمة",
+      parameters: {
+        type: "object",
+        properties: {
+          category_name: { type: "string", description: "اسم التصنيف" },
+          item_name: { type: "string", description: "اسم الوجبة" },
+          price: { type: "number", description: "السعر" },
+          description: { type: "string", description: "وصف الوجبة" }
+        },
+        required: ["item_name", "price"]
+      }
+    },
+    {
+      type: "function",
+      name: "update_restaurant_info",
+      description: "تعديل معلومات وتفاصيل المطعم الأساسية",
+      parameters: {
+        type: "object",
+        properties: {
+          restaurant_name: { type: "string", description: "اسم المطعم الجديد" }
+        }
+      }
     }
-    if (!dish) {
-      alert('يرجى إدخال اسم الوجبة أو المكونات!');
-      return;
+  ];
+
+  // 4. تنفيذ الوظائف محلياً عند استدعائها من Gemini
+  function executeFunction(name, args) {
+    log(`تنفيذ الأمر: ${name} بالمدخلات: ${JSON.stringify(args)}`);
+    
+    if (name === "update_design") {
+      if (args.primary_color) siteSettings.theme.primary_color = args.primary_color;
+      if (args.bg_color) siteSettings.theme.bg_color = args.bg_color;
+      if (args.card_bg) siteSettings.theme.card_bg = args.card_bg;
+      if (args.text_color) siteSettings.theme.text_color = args.text_color;
+      if (args.font_size) siteSettings.theme.font_size = args.font_size;
+    } 
+    else if (name === "add_menu_item") {
+      let cat = siteMenu.categories.find(c => c.name === (args.category_name || "الرئيسية"));
+      if (!cat) {
+        cat = { name: args.category_name || "الرئيسية", items: [] };
+        siteMenu.categories.push(cat);
+      }
+      cat.items.push({
+        id: Date.now(),
+        name: args.item_name,
+        price: args.price,
+        description: args.description || ""
+      });
+    }
+    else if (name === "update_restaurant_info") {
+      if (args.restaurant_name) siteSettings.restaurant_name = args.restaurant_name;
     }
 
-    const outputTextarea = document.getElementById('aiOutput');
-    outputTextarea.value = 'جاري التوليد باستخدام Gemini... ⏳';
+    updateUI();
+  }
+
+  // 5. الاتصال بـ Gemini Interactions API
+  async function sendToGemini() {
+    const key = localStorage.getItem('GEMINI_API_KEY');
+    const promptText = document.getElementById('aiPrompt').value.trim();
+
+    if (!key) return alert('يرجى كتابة وحفظ المفتاح أولاً!');
+    if (!promptText) return alert('يرجى كتابة الأمر!');
+
+    log(`إرسال الطلب لـ Gemini: "${promptText}"...`);
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: "gemini-3.6-flash",
-          input: `اكتب وصفاً تسويقياً مشهياً وقصيراً باللغة العربية للوجبة التالية ليتم عرضه في قائمة طعام مطعم: ${dish}`
+          input: `أنت مدير النظم الشامل للموقع. بناءً على هذا الطلب: "${promptText}"، قم باستدعاء الدالة المناسبة لتنفيذ التعديل المطلوب على التصميم أو المحتوى.`,
+          tools: systemTools
         })
       });
 
-      const data = await response.json();
-      
-      if (data.output_text) {
-        outputTextarea.value = data.output_text;
-      } else if (data.steps) {
-        const step = data.steps.find(s => s.type === "model_output");
-        outputTextarea.value = step?.content[0]?.text || "لم يتم إرجاع نص متوافق.";
-      } else {
-        outputTextarea.value = "حدث خطأ أثناء الاستجابة: " + JSON.stringify(data);
+      const data = await res.json();
+
+      // البحث عن Function Calls في الاستجابة
+      let executed = false;
+      if (data.steps) {
+        for (const step of data.steps) {
+          if (step.type === "function_call") {
+            executeFunction(step.name, step.arguments);
+            executed = true;
+          }
+        }
       }
+
+      if (executed) {
+        log("تم تنفيذ جميع التعديلات المطلوبة بنجاح!");
+      } else if (data.output_text) {
+        log(`رد Gemini: ${data.output_text}`);
+      } else {
+        log("لم يتخذ الذكاء الاصطناعي إجراءً برمجياً، حاول توضيح الطلب أكثر.");
+      }
+
     } catch (err) {
       console.error(err);
-      outputTextarea.value = 'فشل الاتصال بـ API. تأكد من صحة المفتاح والاتصال.';
-    }
-  }
-
-  // تحميل قائمة الطعام من ملف menu.json
-  async function loadMenu() {
-    try {
-      const res = await fetch('../menu.json');
-      const data = await res.json();
-      let html = '';
-      data.categories.forEach(cat => {
-        html += `<h3>${cat.name}</h3>`;
-        cat.items.forEach(item => {
-          html += `
-            <div class="menu-item-row">
-              <div>
-                <strong>${item.name}</strong> - ${item.price} ل.س
-                <br><small style="color:#666">${item.description}</small>
-              </div>
-            </div>
-          `;
-        });
-      });
-      document.getElementById('menuContainer').innerHTML = html;
-    } catch(e) {
-      document.getElementById('menuContainer').innerHTML = '<p style="color:red">لم يتم العثور على menu.json أو هناك خطأ في التنسيق.</p>';
+      log("حدث خطأ أثناء الاتصال بالسيرفر.");
     }
   }
 </script>
