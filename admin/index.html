@@ -15,19 +15,20 @@
         button:disabled { background: #9ca3af; cursor: not-allowed; }
         .ai-box { background: #f0fdf4; border: 2px dashed #0ca143; }
         .preview-card { padding: 12px; border-radius: 10px; margin: 6px 0; display: flex; justify-content: space-between; border: 1px solid rgba(0,0,0,0.08); font-weight: bold; }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
+        .status-loading { background: #fef3c7; color: #d97706; }
+        .status-ready { background: #dcfce7; color: #15803d; }
+        .status-error { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>🔑 إعدادات المفاتيح</h2>
-    <label>GitHub Token (PAT):</label>
-    <input type="password" id="ghToken" placeholder="ghp_...">
-    
-    <label style="margin-top: 10px; display:block;">Gemini API Key:</label>
-    <input type="password" id="geminiKey" value="AQ.Ab8RN6KvrSGtF7wMy23vEx96RrEwEKead4Ionqv6HGIJdmVVBQ">
-    
-    <button onclick="saveKeys()" style="background:#111827;">حفظ المفاتيح محلياً 💾</button>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>🔑 حالة الاتصال بالمستودع</h2>
+        <span id="dataStatus" class="status-badge status-loading">جاري جلب البيانات... ⏳</span>
+    </div>
+    <p style="font-size:0.85rem; color:#6b7280; margin-top:5px;">تم دمج مفاتيح GitHub و Gemini تلقائياً في الكود.</p>
 </div>
 
 <div class="box ai-box">
@@ -35,7 +36,7 @@
     <p style="font-size:0.85rem; color:#555; line-height: 1.4; margin-top: 5px;">
         اطلب ما تشاء! (تعديل الأسعار، إضافة أصناف، تغيير كامل لثيم الألوان والتصميم، اسم المطعم، أو العملة).
     </p>
-    <textarea id="aiPrompt" rows="3" placeholder="مثال: غير ثيم الموقع إلى الليلي الداكن الفاخر (أسود وذهبي)، وارفع كل الأسعار 1000 ليرة، وأضف قسم كؤوس كوكتيل"></textarea>
+    <textarea id="aiPrompt" rows="3" placeholder="مثال: غير اللون الأخضر إلى اللون الأحمر، وارفع أسعار المشروبات 500 ليرة"></textarea>
     <button onclick="runUltimateAiEdit()" id="aiBtn">تطبيق التعديلات الجذرية 🚀</button>
 </div>
 
@@ -49,28 +50,33 @@
 </div>
 
 <script>
-    // ⚠️ استبدل هذا باسم حسابك ومستودعك على جيثب
-    const REPO = 'YOUR_GITHUB_USERNAME/menu-ai-test'; 
+    // === المفاتيح المدمجة إجبارياً ===
+    const REPO = 'majdmereee/-api'; 
+    const GH_TOKEN = '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';
+    const GEMINI_KEY = 'AQ.Ab8RN6KvrSGtF7wMy23vEx96RrEwEKead4Ionqv6HGIJdmVVBQ';
 
     let menuData = null, menuSha = null;
     let settingsData = null, settingsSha = null;
 
-    function saveKeys() {
-        localStorage.setItem('test_gh_token', document.getElementById('ghToken').value.trim());
-        localStorage.setItem('test_gemini_key', document.getElementById('geminiKey').value.trim());
-        alert("تم حفظ المفاتيح ✔️");
-        loadDataFromGitHub();
-    }
-
+    // جلب البيانات تلقائياً فور فتح الصفحة
     async function loadDataFromGitHub() {
-        const token = localStorage.getItem('test_gh_token');
-        if(!token) return;
+        const statusEl = document.getElementById('dataStatus');
+        statusEl.className = 'status-badge status-loading';
+        statusEl.innerText = 'جاري جلب البيانات... ⏳';
 
         try {
             const [mRes, sRes] = await Promise.all([
-                fetch(`https://api.github.com/repos/${REPO}/contents/menu.json?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`https://api.github.com/repos/${REPO}/contents/settings.json?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`https://api.github.com/repos/${REPO}/contents/menu.json?t=${Date.now()}`, { 
+                    headers: { 'Authorization': `Bearer ${GH_TOKEN}` } 
+                }),
+                fetch(`https://api.github.com/repos/${REPO}/contents/settings.json?t=${Date.now()}`, { 
+                    headers: { 'Authorization': `Bearer ${GH_TOKEN}` } 
+                })
             ]);
+
+            if (!mRes.ok || !sRes.ok) {
+                throw new Error("فشل الوصول إلى ملفات المستودع، تأكد من وجود ملفي menu.json و settings.json في المستودع.");
+            }
 
             const mData = await mRes.json();
             const sData = await sRes.json();
@@ -81,8 +87,16 @@
             menuData = JSON.parse(decodeURIComponent(escape(atob(mData.content))));
             settingsData = JSON.parse(decodeURIComponent(escape(atob(sData.content))));
 
+            statusEl.className = 'status-badge status-ready';
+            statusEl.innerText = 'البيانات جاهزة للتعديل ✔️';
+
             renderPreview();
-        } catch(e) { console.error("خطأ في جلب البيانات:", e); }
+        } catch(e) { 
+            console.error("خطأ في جلب البيانات:", e);
+            statusEl.className = 'status-badge status-error';
+            statusEl.innerText = 'خطأ في جلب البيانات ❌';
+            alert("حدث خطأ أثناء تحميل البيانات:\n" + e.message);
+        }
     }
 
     function renderPreview() {
@@ -97,7 +111,7 @@
         themeBox.style.color = t.text_color || '#111827';
         themeBox.style.border = `3px solid ${t.primary_color || '#0ca143'}`;
         themeBox.style.borderRadius = t.card_radius || '16px';
-        themeBox.innerText = `اسم المطعم: ${settingsData.store_name} | اللون الرئيسي: ${t.primary_color || '#0ca143'}`;
+        themeBox.innerText = `اسم المطعم: ${settingsData.store_name || 'غير محدد'} | اللون الرئيسي: ${t.primary_color || '#0ca143'}`;
 
         // 2. معاينة المنيو
         const mBox = document.getElementById('menuPreview');
@@ -115,12 +129,14 @@
     }
 
     async function runUltimateAiEdit() {
-        const geminiKey = document.getElementById('geminiKey').value.trim() || localStorage.getItem('test_gemini_key');
         const prompt = document.getElementById('aiPrompt').value.trim();
         const aiBtn = document.getElementById('aiBtn');
 
-        if (!geminiKey || !prompt || !menuData || !settingsData) {
-            return alert("تأكد من تحميل البيانات وإدخال المفاتيح والأمر المطلوب");
+        if (!prompt) {
+            return alert("يرجى كتابة الأمر المطلوبة أولاً");
+        }
+        if (!menuData || !settingsData) {
+            return alert("جاري تحميل البيانات من GitHub، انتظر لحظة ثم حاول مجدداً.");
         }
 
         aiBtn.disabled = true;
@@ -145,8 +161,7 @@ ${JSON.stringify(menuData, null, 2)}
   "menu": { ... }
 }`;
 
-        // استخدام واجهة Interactions API الحديثة
-        const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${geminiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${GEMINI_KEY}`;
 
         try {
             const response = await fetch(url, {
@@ -171,7 +186,6 @@ ${JSON.stringify(menuData, null, 2)}
                 }
             }
 
-            // تنظيف النص المستلم وتحويله لـ JSON
             const cleanJsonText = replyText.replace(/```json/g, '').replace(/```/g, '').trim();
             const parsedResult = JSON.parse(cleanJsonText);
 
@@ -179,7 +193,7 @@ ${JSON.stringify(menuData, null, 2)}
                 menuData = parsedResult.menu;
                 settingsData = parsedResult.settings;
                 renderPreview();
-                alert("تم تجهيز التعديلات وتحديث المعاينة بنجاح! 🎉 راجع الشاشة بالأسفل واضغط زر الحفظ لمزامنتها.");
+                alert("تم تجهيز التعديلات وتحديث المعاينة بنجاح! 🎉 راجع المعاينة بالأسفل واضغط زر الحفظ لمزامنتها.");
             } else {
                 alert("تعذر استخراج البيانات بشكل دقيق، حاول صياغة الأمر بوضوح أكبر.");
             }
@@ -193,7 +207,6 @@ ${JSON.stringify(menuData, null, 2)}
     }
 
     async function saveAllToGitHub() {
-        const token = localStorage.getItem('test_gh_token');
         const saveBtn = document.getElementById('saveBtn');
         saveBtn.disabled = true;
         saveBtn.innerText = "جاري الحفظ والرفع على GitHub... ⏳";
@@ -204,13 +217,13 @@ ${JSON.stringify(menuData, null, 2)}
 
             await fetch(`https://api.github.com/repos/${REPO}/contents/menu.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: "AI Ultimate Menu Update", content: mContent, sha: menuSha })
             });
 
             await fetch(`https://api.github.com/repos/${REPO}/contents/settings.json`, {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: "AI Ultimate Settings Update", content: sContent, sha: settingsSha })
             });
 
@@ -224,9 +237,8 @@ ${JSON.stringify(menuData, null, 2)}
         }
     }
 
+    // تشغيل جلب البيانات بمجرد فتح الصفحة
     window.onload = () => {
-        if(localStorage.getItem('test_gh_token')) document.getElementById('ghToken').value = localStorage.getItem('test_gh_token');
-        if(localStorage.getItem('test_gemini_key')) document.getElementById('geminiKey').value = localStorage.getItem('test_gemini_key');
         loadDataFromGitHub();
     };
 </script>
