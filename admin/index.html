@@ -28,7 +28,7 @@
         <h2>🔑 حالة الاتصال بالمستودع</h2>
         <span id="dataStatus" class="status-badge status-loading">جاري جلب البيانات... ⏳</span>
     </div>
-    <p style="font-size:0.85rem; color:#6b7280; margin-top:5px;">تم دمج مفاتيح GitHub و Gemini تلقائياً في الكود.</p>
+    <p style="font-size:0.85rem; color:#6b7280; margin-top:5px;">تم ضبط المفاتيح واسم المستودع تلقائياً.</p>
 </div>
 
 <div class="box ai-box">
@@ -50,8 +50,11 @@
 </div>
 
 <script>
-    // === المفاتيح المدمجة إجبارياً ===
-    const REPO = 'majdmereee/-api'; 
+    // === تصحيح مسار المستودع والمفاتيح المدمجة ===
+    const REPO_OWNER = 'majdmereee';
+    const REPO_NAME = '-api';
+    const REPO = `${REPO_OWNER}/${REPO_NAME}`;
+
     const GH_TOKEN = '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';
     const GEMINI_KEY = 'AQ.Ab8RN6KvrSGtF7wMy23vEx96RrEwEKead4Ionqv6HGIJdmVVBQ';
 
@@ -75,7 +78,8 @@
             ]);
 
             if (!mRes.ok || !sRes.ok) {
-                throw new Error("فشل الوصول إلى ملفات المستودع، تأكد من وجود ملفي menu.json و settings.json في المستودع.");
+                const errText = !mRes.ok ? await mRes.text() : await sRes.text();
+                throw new Error(`خطأ في الوصول إلى المستودع (${mRes.status}/${sRes.status}): ${errText}`);
             }
 
             const mData = await mRes.json();
@@ -237,7 +241,6 @@ ${JSON.stringify(menuData, null, 2)}
         }
     }
 
-    // تشغيل جلب البيانات بمجرد فتح الصفحة
     window.onload = () => {
         loadDataFromGitHub();
     };
