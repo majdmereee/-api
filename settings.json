@@ -1,12 +1,10 @@
 {
-  "store_name": "Garden Food",
-  "currency": "ل.س",
+  "restaurant_name": "مطعم الوجبات الشهية",
   "theme": {
     "primary_color": "#0ca143",
     "bg_color": "#f4f7f6",
-    "surface_color": "#ffffff",
+    "card_bg": "#ffffff",
     "text_color": "#111827",
-    "card_radius": "16px",
-    "font_family": "Tajawal"
+    "font_size": "16px"
   }
 }
