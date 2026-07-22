@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم بالذكاء الاصطناعي الكامل</title>
+  <title>لوحة التحكم بالذكاء الاصطناعي الكامل - إدارة المطعم</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  
   <style id="custom-theme">
     :root {
       --primary-color: #0ca143;
@@ -14,6 +15,7 @@
       --font-size-base: 16px;
     }
   </style>
+
   <style>
     body {
       font-family: 'Tajawal', sans-serif;
@@ -22,8 +24,12 @@
       font-size: var(--font-size-base);
       padding: 20px;
       margin: 0;
+      transition: all 0.3s ease;
     }
-    .container { max-width: 900px; margin: 0 auto; }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
     .box {
       background: var(--card-bg);
       padding: 20px;
@@ -31,7 +37,10 @@
       margin-bottom: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    input, textarea, button {
+    h1, h2, h3, h4 {
+      margin-top: 0;
+    }
+    input, textarea, button, select {
       width: 100%;
       padding: 12px;
       margin-top: 8px;
@@ -39,6 +48,11 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
       font-family: inherit;
+      font-size: 1rem;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
     }
     button {
       background: var(--primary-color);
@@ -46,69 +60,102 @@
       border: none;
       font-weight: bold;
       cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    button:active {
+      transform: scale(0.98);
     }
     .chat-box {
       background: #eef2ff;
       border: 2px solid #6366f1;
-      padding: 15px;
-      border-radius: 12px;
+      padding: 20px;
+      border-radius: 16px;
     }
     .log-box {
       background: #1e293b;
       color: #38bdf8;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       font-family: monospace;
       font-size: 0.85rem;
-      max-height: 150px;
+      max-height: 180px;
       overflow-y: auto;
+      line-height: 1.5;
     }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    pre {
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+    }
+    .status-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    .status-ok { background: #dcfce7; color: #15803d; }
+    .status-none { background: #fee2e2; color: #b91c1c; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🤖 إدارة المطعم الشاملة مع Gemini AI</h1>
+  <h1>🤖 لوحة التحكم الشاملة بمساعدة Gemini</h1>
 
-  <!-- ضبط المفتاح -->
+  <!-- قسم ضبط API Key -->
   <div class="box">
-    <h3>🔑 مفتاح التشغيل (Gemini API)</h3>
-    <input type="password" id="apiKey" placeholder="أدخل مفتاح Gemini API...">
+    <h3>🔑 مفتاح التشغيل (Gemini API Key)</h3>
+    <p><small>ادخل مفتاحك الخاص بـ Gemini AI Studio لمرة واحدة وسيتم حفظه بمتصفحك:</small></p>
+    <input type="password" id="apiKey" placeholder="أدخل مفتاح Gemini API الجديد هنا...">
     <button onclick="saveKey()">حفظ المفتاح</button>
+    <div id="keyStatus"></div>
   </div>
 
-  <!-- مركز التحكم الذكي (الأوامر الصوتية أو النصية لـ Gemini) -->
+  <!-- مركز أوامر الذكاء الاصطناعي -->
   <div class="box chat-box">
-    <h2>💬 أمر Gemini للتعديل على أي شيء في الموقع</h2>
-    <p><small>مثال: "أضف وجبة بيتزا ببروني بسعر 12$" أو "غير خلفية الموقع للون الداكن" أو "غير اسم المطعم إلى مطعم البركة"</small></p>
-    <textarea id="aiPrompt" rows="3" placeholder="اكتب لـ Gemini ما تريد تعديله الآن..."></textarea>
+    <h2>💬 أمر Gemini للتعديل المباشر</h2>
+    <p><small>اكتب ما تريد تعديله بكلماتك العادية، وسيستخدم Gemini الأدوات المتاحة له لتنفيذه مباشرةً:</small></p>
+    <textarea id="aiPrompt" rows="3" placeholder="مثال: غير لون الموقع للأحمر (#ef4444) / أو أضف بيتزا مارغريتا بسعر 15$"></textarea>
     <button onclick="sendToGemini()">تنفيذ الأمر بواسطة Gemini 🚀</button>
   </div>
 
-  <!-- سجل الأوامر البرمجية التي ينفذها Gemini -->
+  <!-- سجل الأوامر الشفاف -->
   <div class="box">
-    <h4>📜 سجل الأوامر التي نفذها الذكاء الاصطناعي:</h4>
-    <div id="logs" class="log-box">في انتظار الأوامر...</div>
+    <h4>📜 سجل الإجراءات والتحديثات:</h4>
+    <div id="logs" class="log-box">> النظام جاهز وبانتظار الأوامر...</div>
   </div>
 
-  <!-- المعاينة الحية للبيانات -->
+  <!-- المعاينة المباشرة للحالة المخزنة -->
   <div class="grid">
     <div class="box">
-      <h3>⚙️ إعدادات الموقع وتصميمه</h3>
+      <h3>⚙️ إعدادات الموقع والتصميم (settings.json)</h3>
       <pre id="settingsPreview">جاري التحميل...</pre>
     </div>
     <div class="box">
-      <h3>🍕 قائمة الطعام الحالية</h3>
+      <h3>🍕 قائمة الطعام الحالية (menu.json)</h3>
       <pre id="menuPreview">جاري التحميل...</pre>
     </div>
   </div>
 </div>
 
 <script>
-  // 1. البيانات التفاعلية في الـ Memory
+  // 1. البيانات التفاعلية الحالية في الذاكرة
   let siteSettings = {
-    restaurant_name: "مطعم الوجبات الشهية",
+    restaurant_name: "مطعم البركة والوجبات",
+    currency: "$",
     theme: {
       primary_color: "#0ca143",
       bg_color: "#f4f7f6",
@@ -121,22 +168,33 @@
   let siteMenu = {
     categories: [
       {
-        name: "الرئيسية",
-        items: [{ id: 1, name: "برغر لحم", price: 10, description: "برغر شهي" }]
+        name: "الوجبات الرئيسية",
+        items: [
+          { id: 1, name: "برغر كلاسيك", price: 10, description: "لحم بقر طازج مع الجبن والصوص" }
+        ]
       }
     ]
   };
 
+  // عند فتح الصفحة
   window.onload = () => {
-    if(localStorage.getItem('GEMINI_API_KEY')) {
-      document.getElementById('apiKey').value = localStorage.getItem('GEMINI_API_KEY');
+    const savedKey = localStorage.getItem('GEMINI_API_KEY');
+    if (savedKey) {
+      document.getElementById('apiKey').value = savedKey;
+      document.getElementById('keyStatus').innerHTML = '<span class="status-tag status-ok">المفتاح محفوض وجاهز</span>';
+    } else {
+      document.getElementById('keyStatus').innerHTML = '<span class="status-tag status-none">لا يوجد مفتاح محفوض</span>';
     }
     updateUI();
   };
 
   function saveKey() {
-    localStorage.setItem('GEMINI_API_KEY', document.getElementById('apiKey').value);
-    alert('تم حفظ المفتاح!');
+    const k = document.getElementById('apiKey').value.trim();
+    if(k) {
+      localStorage.setItem('GEMINI_API_KEY', k);
+      document.getElementById('keyStatus').innerHTML = '<span class="status-tag status-ok">تم الحفظ بنجاح!</span>';
+      alert('تم حفظ المفتاح بنجاح!');
+    }
   }
 
   function log(msg) {
@@ -145,9 +203,9 @@
     l.scrollTop = l.scrollHeight;
   }
 
-  // 2. تحديث واجهة الموقع والتصميم فوراً
+  // 2. تطبيق وتحديث التغييرات على واجهة المستخدم فوراً
   function updateUI() {
-    // تطبيق الثيم والتصميم
+    // تطبيق متغيرات الألوان والتصميم
     const root = document.querySelector(':root');
     root.style.setProperty('--primary-color', siteSettings.theme.primary_color);
     root.style.setProperty('--bg-color', siteSettings.theme.bg_color);
@@ -155,23 +213,23 @@
     root.style.setProperty('--text-color', siteSettings.theme.text_color);
     root.style.setProperty('--font-size-base', siteSettings.theme.font_size);
 
-    // عرض البيانات
+    // عرض شجرة البيانات بـ JSON
     document.getElementById('settingsPreview').textContent = JSON.stringify(siteSettings, null, 2);
     document.getElementById('menuPreview').textContent = JSON.stringify(siteMenu, null, 2);
   }
 
-  // 3. أدوات الوظائف (Functions) المتاحة لـ Gemini
+  // 3. تعريف الأدوات والوظائف التي يستدعيها Gemini (Tools Definition)
   const systemTools = [
     {
       type: "function",
       name: "update_design",
-      description: "تعديل ألوان وتصميم ورسوميات الموقع من A to Z",
+      description: "تعديل ألوان وتصميم واجهة الموقع الكاملة من A to Z",
       parameters: {
         type: "object",
         properties: {
-          primary_color: { type: "string", description: "اللون الرئيسي الممثل للموقع (Hex Color)" },
-          bg_color: { type: "string", description: "لون الخلفية" },
-          card_bg: { type: "string", description: "لون خلفية البطاقات والبوكسات" },
+          primary_color: { type: "string", description: "اللون الرئيسي الممثل للعلامة التجارية برمز Hex مثل #ef4444" },
+          bg_color: { type: "string", description: "لون خلفية الموقع" },
+          card_bg: { type: "string", description: "لون خلفية الكروت والبوكسات" },
           text_color: { type: "string", description: "لون النصوص" },
           font_size: { type: "string", description: "حجم الخط مثل 16px أو 18px" }
         }
@@ -180,14 +238,14 @@
     {
       type: "function",
       name: "add_menu_item",
-      description: "إضافة وجبة جديدة للقائمة",
+      description: "إضافة وجبة أو صنف جديد لقائمة الطعام",
       parameters: {
         type: "object",
         properties: {
-          category_name: { type: "string", description: "اسم التصنيف" },
+          category_name: { type: "string", description: "اسم التصنيف مثل الوجبات الرئيسية أو المشروبات" },
           item_name: { type: "string", description: "اسم الوجبة" },
-          price: { type: "number", description: "السعر" },
-          description: { type: "string", description: "وصف الوجبة" }
+          price: { type: "number", description: "سعر الوجبة" },
+          description: { type: "string", description: "وصف شهي ومختصر للوجبة" }
         },
         required: ["item_name", "price"]
       }
@@ -195,19 +253,20 @@
     {
       type: "function",
       name: "update_restaurant_info",
-      description: "تعديل معلومات وتفاصيل المطعم الأساسية",
+      description: "تعديل معلومات وتفاصيل المطعم الأساسية مثل الاسم أو العملة",
       parameters: {
         type: "object",
         properties: {
-          restaurant_name: { type: "string", description: "اسم المطعم الجديد" }
+          restaurant_name: { type: "string", description: "اسم المطعم الجديد" },
+          currency: { type: "string", description: "رمز العملة المستخدمة" }
         }
       }
     }
   ];
 
-  // 4. تنفيذ الوظائف محلياً عند استدعائها من Gemini
+  // 4. المحرك المحلي لتنفيذ الأوامر الصادرة من Gemini (Function Execution Engine)
   function executeFunction(name, args) {
-    log(`تنفيذ الأمر: ${name} بالمدخلات: ${JSON.stringify(args)}`);
+    log(`⚙️ تنفيذ الإجراء [${name}] بالمدخلات: ${JSON.stringify(args)}`);
     
     if (name === "update_design") {
       if (args.primary_color) siteSettings.theme.primary_color = args.primary_color;
@@ -217,11 +276,14 @@
       if (args.font_size) siteSettings.theme.font_size = args.font_size;
     } 
     else if (name === "add_menu_item") {
-      let cat = siteMenu.categories.find(c => c.name === (args.category_name || "الرئيسية"));
+      let targetCategoryName = args.category_name || "الوجبات الرئيسية";
+      let cat = siteMenu.categories.find(c => c.name === targetCategoryName);
+      
       if (!cat) {
-        cat = { name: args.category_name || "الرئيسية", items: [] };
+        cat = { name: targetCategoryName, items: [] };
         siteMenu.categories.push(cat);
       }
+      
       cat.items.push({
         id: Date.now(),
         name: args.item_name,
@@ -231,20 +293,34 @@
     }
     else if (name === "update_restaurant_info") {
       if (args.restaurant_name) siteSettings.restaurant_name = args.restaurant_name;
+      if (args.currency) siteSettings.currency = args.currency;
     }
 
+    // تحديث الواجهة مباشرة فور التنفيذ
     updateUI();
   }
 
-  // 5. الاتصال بـ Gemini Interactions API
+  // 5. الاتصال بـ Gemini عبر Interactions API
   async function sendToGemini() {
-    const key = localStorage.getItem('GEMINI_API_KEY');
-    const promptText = document.getElementById('aiPrompt').value.trim();
+    const key = localStorage.getItem('GEMINI_API_KEY') || document.getElementById('apiKey').value.trim();
+    const userQuery = document.getElementById('aiPrompt').value.trim();
 
-    if (!key) return alert('يرجى كتابة وحفظ المفتاح أولاً!');
-    if (!promptText) return alert('يرجى كتابة الأمر!');
+    if (!key) return alert('يرجى حفظ مفتاح Gemini API أولاً!');
+    if (!userQuery) return alert('يرجى كتابة الأمر!');
 
-    log(`إرسال الطلب لـ Gemini: "${promptText}"...`);
+    log(`🚀 إرسال الطلب لـ Gemini: "${userQuery}"...`);
+
+    // إعطاء النظام سياق مفصل لكي يستنتج الألوان والوظائف بذكاء عالية
+    const promptWithContext = `
+    أنت المدير التقني للموقع.
+    البيانات والحالة الحالية هي:
+    - اسم المطعم الحالي: "${siteSettings.restaurant_name}".
+    - اللون الرئيسي الحالي (primary_color): "${siteSettings.theme.primary_color}".
+    - لون الخلفية الحالي (bg_color): "${siteSettings.theme.bg_color}".
+    
+    طلب المستخدم المباشر: "${userQuery}".
+    قم باختيار الدالة (Function) المناسبة واستدعائها بالقيم الصحيحة والرمز السداسي عشر (Hex Color) المناسب للألوان فوراً.
+    `;
 
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/interactions?key=${key}`, {
@@ -252,16 +328,22 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: "gemini-3.6-flash",
-          input: `أنت مدير النظم الشامل للموقع. بناءً على هذا الطلب: "${promptText}"، قم باستدعاء الدالة المناسبة لتنفيذ التعديل المطلوب على التصميم أو المحتوى.`,
+          input: promptWithContext,
           tools: systemTools
         })
       });
 
       const data = await res.json();
 
-      // البحث عن Function Calls في الاستجابة
+      if (data.error) {
+        log(`❌ خطأ من API: ${data.error.message}`);
+        return;
+      }
+
       let executed = false;
-      if (data.steps) {
+
+      // قراءة الاستجابة واستخراج الاستدعاء البرمجي (Function Call)
+      if (data.steps && Array.isArray(data.steps)) {
         for (const step of data.steps) {
           if (step.type === "function_call") {
             executeFunction(step.name, step.arguments);
@@ -271,16 +353,16 @@
       }
 
       if (executed) {
-        log("تم تنفيذ جميع التعديلات المطلوبة بنجاح!");
+        log("🎉 تم تنفيذ التعديل بنجاح على الواجهة والإعدادات!");
       } else if (data.output_text) {
-        log(`رد Gemini: ${data.output_text}`);
+        log(`💬 رد Gemini: ${data.output_text}`);
       } else {
-        log("لم يتخذ الذكاء الاصطناعي إجراءً برمجياً، حاول توضيح الطلب أكثر.");
+        log("⚠️ لم يستدعِ النموذج أي دالة، يرجى كتابة الطلب بتحديد أكثر.");
       }
 
     } catch (err) {
       console.error(err);
-      log("حدث خطأ أثناء الاتصال بالسيرفر.");
+      log("❌ حدث خطأ في الاتصال بالسيرفر.");
     }
   }
 </script>
